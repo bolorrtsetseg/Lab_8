@@ -5,7 +5,7 @@ def calculate_total(price, quantity):
         raise ValueError("Үнэ болон тоо хэмжээ зөв байх ёстой")
     return price * quantity
 def test_normal_order():
-    assert calculate_total(15000, 2) == 40000
+    assert calculate_total(15000, 2) == 30000
 def test_single_order():
     assert calculate_total(12000, 1) == 12000
 
