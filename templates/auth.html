@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="auth-panel">
+  <div class="auth-icon">◈</div>
+  <h1>{{ 'Бүртгүүлэх' if mode == 'register' else 'Тавтай морил' }}</h1>
+  <p class="muted">{{ 'Үйлчлүүлэгчийн шинэ бүртгэл үүсгэх' if mode == 'register' else 'NomNom системд бүртгэлээрээ нэвтэрнэ үү' }}</p>
+  <form method="post" class="form">
+    {% if mode == 'register' %}
+    <label>Овог, нэр<input name="name" required autocomplete="name" placeholder="Таны нэр"></label>
+    <label>Утасны дугаар<input name="phone" required inputmode="tel" autocomplete="tel" placeholder="99112233"></label>
+    {% endif %}
+    <label>Имэйл хаяг<input type="email" name="email" required autocomplete="email" placeholder="example@gmail.com"></label>
+    <label>Нууц үг<input type="password" name="password" minlength="8" required autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" placeholder="8-аас дээш тэмдэгт"></label>
+    {% if mode == 'register' %}
+    <label>Нууц үг давтах<input type="password" name="confirm_password" minlength="8" required autocomplete="new-password" placeholder="Нууц үгээ дахин оруулна уу"></label>
+    {% endif %}
+    <button class="btn full" type="submit">{{ 'Бүртгэл үүсгэх' if mode == 'register' else 'Нэвтрэх' }}</button>
+  </form>
+  <p class="center muted">{% if mode == 'register' %}Бүртгэлтэй юу? <a href="{{ url_for('login') }}">Нэвтрэх</a>{% else %}Бүртгэлгүй юу? <a href="{{ url_for('register') }}">Бүртгүүлэх</a>{% endif %}</p>
+  {% if mode == 'login' %}<p class="center muted auth-hint">Ажилтан, хүргэлтийн ажилтан болон администратор өөрийн бүртгэлээр нэвтэрнэ.</p>{% endif %}
+</section>
+{% endblock %}

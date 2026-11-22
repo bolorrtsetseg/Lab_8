@@ -1,0 +1,24 @@
+{% extends 'base.html' %}{% block content %}
+<section class="section"><span class="eyebrow">{{ roles[session.role] }}</span>
+<h1>{% if session.role=='staff' %}Гал тогооны захиалгууд{% elif session.role=='courier' %}Миний хүргэлтүүд{% else %}Админы удирдлага{% endif %}</h1>
+<p class="muted">{% if session.role=='staff' %}Захиалсан хоолны нэр, тоо ширхэгийг шалгаж баталгаажуулна.{% elif session.role=='courier' %}Хоол бэлэн болоход захиалга автоматаар шилжинэ. Хүргэлтийн төлөвийг энд удирдана.{% else %}Захиалга, хоолны цэс болон хэрэглэгчийн эрхийг удирдана.{% endif %}</p>
+{% if session.role=='admin' %}<div class="stats">{% for role,n in role_counts.items() %}<div class="panel"><b>{{ n }}</b><div>{{ roles[role] }}</div></div>{% endfor %}</div><p><a class="btn" href="{{ url_for('users') }}">Хэрэглэгчийн эрх ба хандалт харах</a></p>{% endif %}
+<div class="order-grid">{% for o in orders %}<article class="panel order-card">
+<div class="order-top"><h3>Захиалга #{{ o.id }}</h3><span class="status">{{ o.status }}</span></div>
+<p><b>Хүлээн авагч:</b> {{ o.recipient }} · {{ o.phone }}</p>
+<p><b>Хэлбэр:</b> {{ 'Хүргэлт' if o.delivery else 'Ирж авах' }}</p>
+{% if o.delivery %}<p><b>Хаяг:</b> {{ o.address }}</p>{% endif %}
+<h4>Захиалсан хоол</h4><ul class="food-lines">{% for item in order_items.get(o.id,[]) %}<li><span>{{ item.food_name }}</span><b>× {{ item.quantity }}</b></li>{% endfor %}</ul>
+<p><b>Нийт:</b> {{ '{:,}'.format(o.total) }}₮</p>
+{% if o.note %}<p><b>Тайлбар:</b> {{ o.note }}</p>{% endif %}
+{% if session.role=='staff' %}
+{% if o.status in ['Шинэ','Баталгаажсан','Бэлтгэж байна'] %}<form method="post" action="{{ url_for('advance',order_id=o.id) }}"><button class="btn">{{ {'Шинэ':'Захиалга баталгаажуулах','Баталгаажсан':'Бэлтгэж эхлэх','Бэлтгэж байна':'Хоол бэлэн болсон'}[o.status] }}</button></form>{% else %}<span class="muted">Гал тогооны ажил дууссан</span>{% endif %}
+{% elif session.role=='courier' %}
+{% if o.status=='Бэлэн болсон' %}<form method="post" action="{{ url_for('advance',order_id=o.id) }}"><button class="btn">Хүргэлтэд гарах</button></form>{% elif o.status=='Хүргэлтэд гарсан' %}<form method="post" action="{{ url_for('advance',order_id=o.id) }}"><button class="btn">Хүргэгдсэн гэж тэмдэглэх</button></form>{% else %}<span class="muted">{{ 'Хүргэлт дууссан' if o.status=='Хүргэгдсэн' else 'Хоол бэлэн болохыг хүлээж байна' }}</span>{% endif %}
+{% elif session.role=='admin' %}
+{% if o.delivery %}<p><b>Хүргэгч:</b> {{ courier_names.get(o.courier_id,'Хуваарилаагүй') }}</p><form method="post" action="{{ url_for('assign',order_id=o.id) }}" class="inline"><select name="courier_id" required><option value="">Хүргэгч сонгох</option>{% for c in couriers %}<option value="{{ c.id }}" {{ 'selected' if o.courier_id==c.id else '' }}>{{ c.name }}</option>{% endfor %}</select><button class="btn small outline">Хуваарилах</button></form>{% endif %}
+<form method="post" action="{{ url_for('admin_status',order_id=o.id) }}" class="inline"><select name="status">{% for s in statuses %}{% if statuses.index(s)>=statuses.index(o.status) and (o.delivery or s!='Хүргэлтэд гарсан') %}<option value="{{ s }}" {{ 'selected' if o.status==s else '' }}>{{ s }}</option>{% endif %}{% endfor %}</select><button class="btn small">Төлөв хадгалах</button></form>
+{% endif %}<p><a href="{{ url_for('order_detail',order_id=o.id) }}">Захиалгын дэлгэрэнгүй</a></p></article>
+{% else %}<div class="panel"><h3>Одоогоор захиалга алга</h3><p class="muted">{% if session.role=='courier' %}Хоол бэлэн болмогц хүргэлтийн захиалга автоматаар энд харагдана.{% else %}Үйлчлүүлэгч захиалга өгсний дараа энд харагдана.{% endif %}</p></div>{% endfor %}</div>
+{% if session.role=='admin' %}<h2>Хоолны цэс удирдах</h2><div class="two-col"><div class="panel"><h3>Шинэ хоол нэмэх</h3><form method="post" action="{{ url_for('food_add') }}" class="form"><label>Хоолны нэр<input name="name" required></label><label>Тайлбар<input name="description"></label><label>Үнэ (₮)<input name="price" type="number" min="0" required></label><label>Ангилал<input name="category" value="Үндсэн хоол" required></label><label>Emoji<input name="emoji" value="🍲"></label><button class="btn">Нэмэх</button></form></div><div class="panel"><h3>Бүртгэлтэй хоолнууд</h3>{% for f in foods %}<div class="summary-row"><span>{{ f.emoji }} {{ f.name }} — {{ '{:,}'.format(f.price) }}₮</span><form method="post" action="{{ url_for('food_toggle',food_id=f.id) }}"><button class="btn small outline">{{ 'Нуух' if f.available else 'Идэвхжүүлэх' }}</button></form></div>{% endfor %}</div></div>{% endif %}
+</section>{% endblock %}
